@@ -21,11 +21,11 @@ from argparse import ArgumentParser
 from pathlib import Path
 from ascii_colors import ASCIIColors
 from time import perf_counter
-from benchmark.create_spherical_caps import (
+from atomcounter_benchmark.create_spherical_caps import (
     create_sphere,
     cut_particle,
 )
-from benchmark.atomistic_utils import (
+from atomcounter_benchmark.atomistic_utils import (
     scaler,
     create_unit_support,
 )

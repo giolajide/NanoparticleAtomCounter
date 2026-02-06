@@ -147,5 +147,5 @@ Any problems or questions?
 
 .. _app: https://nanoparticle-atom-counting.streamlit.app
 .. _here: https://github.com/szilvasi-group/NanoparticleAtomCounter/issues
-.. _file: https://github.com/giolajide/NanoparticleAtomCounter/blob/main/sample_input.csv
+.. _file: https://github.com/giolajide/NanoparticleAtomCounter/blob/main/docs/sample_input.csv
 

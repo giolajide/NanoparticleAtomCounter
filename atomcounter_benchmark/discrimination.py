@@ -42,7 +42,7 @@ from typing import Tuple, Literal, List, Union
 from ase.neighborlist import natural_cutoffs, NeighborList
 import warnings
 from os import system, environ
-from benchmark.atomistic_utils import (
+from atomcounter_benchmark.atomistic_utils import (
     divider,
     setup_neighborlist,
     setup_analyzer,
