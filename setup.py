@@ -28,7 +28,7 @@ setup(
     install_requires=[
         "numpy>=1.20,<2.3",
         "pandas>=1.4",
-        "streamlit>=1.4,<2",
+        "streamlit>=1.50,<2",
         "openpyxl>=3.1",
         "xlrd>=2.0",
     ],
