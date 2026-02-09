@@ -1,6 +1,6 @@
 """
 This is the script the streamlit app uses
-https://nanoparticle-atom-counting.streamlit.app/
+https://nanoparticleatomcounter.streamlit.app/
 """
 import contextlib
 import os
