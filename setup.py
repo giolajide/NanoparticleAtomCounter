@@ -28,9 +28,11 @@ setup(
     install_requires=[
         "numpy>=1.20,<2.3",
         "pandas>=1.4",
-        "streamlit>=1.50,<2",
+        "streamlit>=1.50,<2", #for streamlit_app.py
         "openpyxl>=3.1",
         "xlrd>=2.0",
+        "selenium>=4.40", #for wake_app.py
+        "webdriver-manager>=4.1", #for wake_app.py
     ],
     extras_require={
         
