@@ -1,5 +1,4 @@
 # This CITATION.cff file was generated with cffinit.
-# Visit https://bit.ly/cffinit to generate yours today!
 
 cff-version: 1.2.0
 title: NanoparticleAtomCounter
@@ -19,7 +18,7 @@ authors:
     orcid: 'https://orcid.org/0000-0002-4218-1570'
     family-names: ' Szilvasi'
 repository-code: 'https://github.com/szilvasi-group/NanoparticleAtomCounter/'
-url: 'https://nanoparticle-atom-counting.streamlit.app/'
+url: 'https://nanoparticleatomcounter.streamlit.app/'
 abstract: >-
   Determines the number of interfacial, perimeter, surface,
   and total atoms of a nanoparticle given the radius and
@@ -30,21 +29,4 @@ keywords:
   - Spherical Cap
   - Catalysis
 license: MIT
-version: 0.1.4
-
-#to be filled in after acceptance
-#preferred-citation:
-#  type:
-#  title:
-#  authors:
-#    - given-names: Gbolagade
-#      family-names: Olajide
-#    - given-names: Tibor
-#      family-names: Szilvasi
-#  journal: 
-#  year: 
-#  volume: 
-#  issue: 
-#  start: 
-#  end: 
-#  doi: 
+version: 0.1.8
