@@ -2,7 +2,7 @@ name: Wake Streamlit App
 
 on:
   schedule:
-    - cron: "0 */5 * * *"   # every 11 hours
+    - cron: "0 */5 * * *"    # every 5 hours
   workflow_dispatch:         # allow manual trigger
 
 jobs:
