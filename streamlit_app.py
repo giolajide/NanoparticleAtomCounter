@@ -203,9 +203,17 @@ def analytics_config():
     return None
 
 
+def is_test_mode():
+    """Skip aggregate analytics for sessions opened with ?test=1.
+
+    This is not authentication and grants no privileged access.
+    """
+    return st.query_params.get('test') == '1'
+
+
 def track(event, workflow, source, particles=0):
     """Only deliberate interactions. No file contents, names, IPs or user IDs."""
-    if st.session_state.get('analytics_opt_out', False):
+    if is_test_mode():
         return
     cfg = analytics_config()
     if not cfg:
@@ -418,7 +426,7 @@ def render_results(workflow, sig):
         cells[1].metric('Total atoms (valid partitions)',metric_value(out.loc[valid,'Total'].sum()) if valid.any() else np.nan)
         denom = out.loc[valid,'Total'].sum()
         cells[2].metric('Surface fraction (valid atoms)',f"{100*out.loc[valid,'Surface'].sum()/denom:.2f}%" if denom>0 else 'Unavailable')
-    #st.caption('Bulk = Total − Surface − Interface − Perimeter (derived, not a native CLI output). Interface and surface exclude perimeter in the package model.')
+    st.caption('Bulk = Total − Surface − Interface − Perimeter (derived, not a native CLI output). Interface and surface exclude perimeter in the package model.')
     if valid.any():
         aggregate = out.loc[valid,SITES].sum()
         composition = pd.DataFrame({'Site':LABELS,'Atoms':aggregate.to_numpy()})
@@ -589,10 +597,8 @@ def main():
     st.markdown('**From TEM-derived nanoparticle geometry to catalytic site populations.**')
     st.write('Estimate total, bulk, surface, interfacial and perimeter atom populations in supported monometallic nanoparticles. No explicit atomistic model or installation required.')
     st.markdown(f'[Documentation]({REPO}#readme) · [GitHub]({REPO}) · [Preprint]({PAPER}) · [Python package]({PYPI})')
-    if analytics_config():
-        with st.expander('Privacy and anonymous usage statistics'):
-            st.caption('Optional aggregate interaction counts record example/custom workflow, calculation and download events, and particle counts. No uploaded data, filenames, IP addresses, or user identifiers are sent by this app to its analytics database. Hosting providers may maintain their own operational logs.')
-            st.checkbox('Do not record my usage statistics',key='analytics_opt_out')
+    if is_test_mode():
+        st.info('Test mode active — usage statistics will not be recorded.')
     # Preserve parameter widgets when switching workflows (Streamlit otherwise removes
     # state for widgets that were not rendered on the current run).
     for key in ['single_'+k for k in EXAMPLE]+['batch_source_choice','batch_mode','distribution_field']:
