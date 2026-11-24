@@ -10,7 +10,7 @@ number of atoms in supported monometallic nanoparticles from their radius,
 contact angle and elemental composition. It approximates each particle as a
 spherical cap, avoiding the need to construct explicit atomistic models.
 
-**Try the free** `interactive web application`_ **— no installation required.**
+**Try the free** `interactive web application`_ **. No installation required.**
 For automated analysis and integration into research workflows, use the
 `Python package`_ or command-line interface (CLI).
 
@@ -19,7 +19,7 @@ For automated analysis and integration into research workflows, use the
    :align: center
    :alt: Schematic showing the surface, interfacial and perimeter regions of a supported nanoparticle.
 
-   Atom populations in a supported nanoparticle. The support itself is not counted.
+   Atom populations in a supported nanoparticle. The support is omitted.
 
 Scientific applications
 -----------------------
@@ -37,7 +37,7 @@ The software estimates geometric site populations; it does not identify
 catalytically active atoms, extract measurements directly from TEM images,
 or calculate reaction rates or TOFs by itself.
 
-Quick start — web application
+Quick start: web application
 -----------------------------
 
 Open https://nanoparticleatomcounter.streamlit.app/ and choose a workflow:
@@ -134,7 +134,7 @@ default where available.
 
 For maximum compatibility with the CLI, retain all six headers, even when
 some columns are empty, and use the same radius definition for all rows.
-The web application also supports mixed radius definitions within a dataset
+The web app also supports mixed radius definitions within a dataset
 and fills in omitted optional columns before calling the CLI.
 
 Understanding the results
@@ -149,13 +149,13 @@ Understanding the results
    * - Total
      - All atoms in the nanoparticle (excluding the support).
    * - Surface
-     - Exposed nanoparticle atoms outside the first contact layer.
+     - Exposed nanoparticle atoms outside the nanoparticle-support interface.
    * - Interfacial
-     - Atoms within the first contact layer, excluding the perimeter.
+     - Atoms of the nanoparticle-support interface, excluding the perimeter.
    * - Perimeter
-     - Atoms along the exposed outer boundary of the first contact layer.
+     - Atoms along the exposed outer boundary of the nanoparticle-support interface.
    * - Bulk
-     - Remaining interior atoms, excluding the other three site populations.
+     - Remaining interior atoms, excluding the Surface, Interfacial, and Perimeter site populations.
 
 The CLI returns ``Perimeter``, ``Interface``, ``Surface`` and ``Total``.
 The web app additionally reports the estimated bulk population, calculated as
@@ -166,11 +166,6 @@ For physically consistent populations, the web app provides percentage
 breakdowns, charts and the corresponding input information in the exported
 CSV. Nonphysical partitions are flagged rather than silently corrected.
 
-For example, the exposed metal fraction can be estimated as
-(Surface + Perimeter) / Total under these geometric definitions. Whether
-this fraction is an appropriate measure of dispersion depends on the
-experimental probe and accessibility of the sites.
-
 Counting methods and limitations
 --------------------------------
 
@@ -178,10 +173,10 @@ Two analytical counting methods are available:
 
 * **Volume (default):** estimates the interfacial and perimeter populations
   from the volumes of their respective regions and bulk atomic density.
-* **Area:** estimates these populations from their footprint areas and
-  facet-dependent planar atomic density. At fixed footprint radius and
-  interface facet, these two populations are independent of contact angle
-  in this mode.
+* **Area:** estimates the interfacial and perimeter populations from their
+  footprint areas and facet-dependent planar atomic density. At fixed footprint
+  radius and interface facet, the interfacial and perimeter populations are
+  independent of contact angle in this mode.
 
 Both modes estimate the total population from the spherical-cap volume and
 use the exposed surface area to estimate the surface population.
@@ -189,16 +184,14 @@ use the exposed surface area to estimate the surface population.
 The model assumes a supported monometallic spherical-cap particle, with
 material properties derived from bulk reference data. Its accuracy may
 be reduced for strongly faceted or irregular shapes, reconstructed or
-strained structures, and very small nanoparticles. The geometry preview and
-atom-type illustration are not atomistic reconstructions. Consult the
+strained structures, and very small nanoparticles. Consult the
 `preprint`_ for the derivation, benchmarking and applicability of the model.
 Benchmark and test routines are included in the repository.
 
-Installation — command line and Python
+Installation: command line and Python
 --------------------------------------
 
-The published package supports Python 3.10–3.13, as specified in its
-packaging configuration. A dedicated environment is recommended:
+I recommend creating a dedicated environment before installing:
 
 .. code-block:: bash
 
@@ -206,7 +199,7 @@ packaging configuration. A dedicated environment is recommended:
    conda activate nac
    python -m pip install NanoparticleAtomCounter
 
-Alternatively, install directly from the research group's repository:
+Alternatively, install by:
 
 .. code-block:: bash
 
@@ -214,8 +207,6 @@ Alternatively, install directly from the research group's repository:
    cd NanoparticleAtomCounter
    python -m pip install -e .
 
-Core dependencies are installed by pip automatically; see ``setup.py`` and
-``requirements.txt`` for the current version constraints.
 
 Command-line usage
 ~~~~~~~~~~~~~~~~~~
@@ -232,7 +223,7 @@ original atom-count columns, in the same row order as the input.
 Python usage
 ~~~~~~~~~~~~
 
-Use the calculation routines directly in Python scripts or notebooks:
+You can use the calculation functions directly in your Python scripts:
 
 .. code-block:: python
 
@@ -251,8 +242,7 @@ Use the calculation routines directly in Python scripts or notebooks:
 
 For the area-based alternative, import ``calculate_by_area`` from
 ``NanoparticleAtomCounter.by_area``. The same input arguments and return
-order apply. Check for nonphysical population estimates before interpreting
-fractions or using the counts in subsequent analysis.
+order apply.
 
 Tests and benchmarks
 --------------------
@@ -271,28 +261,16 @@ Install the benchmark dependencies and run the benchmark:
    python -m pip install "NanoparticleAtomCounter[benchmark]"
    atom-count-benchmark
 
-For developers working from a local checkout of the redesigned web app,
-install its plotting dependency and start Streamlit:
-
-.. code-block:: bash
-
-   python -m pip install "altair>=5,<7"
-   python -m streamlit run streamlit_app.py
-
 Citation
 --------
 
 If NanoparticleAtomCounter contributes to your research, please cite the
-associated ChemRxiv preprint (not yet peer reviewed):
+associated ChemRxiv preprint:
 
    Olajide, G.; Szilvási, T. *NanoparticleAtomCounter: A Python/Web-based
    package to convert nanoparticle geometry from Transmission Electron
    Microscopy into atom counts.* ChemRxiv.
    https://doi.org/10.26434/chemrxiv.15001082/v1
-
-Software citation metadata is also provided in `CITATION.cff`_. Please
-report the package version and counting method used when describing your
-analysis for reproducibility.
 
 Feedback and contributions
 --------------------------
@@ -303,15 +281,7 @@ include the software version, counting method and a minimal reproducible
 example (without confidential data).
 
 * `Open a GitHub issue`_.
-* Contact Gbolagade Olajide: giolajide@crimson.ua.edu.
-
-The hosted web application records aggregate interaction counts (e.g.,
-calculations, uploads and result-download clicks) and particle counts to
-help assess usage. Its analytics do not transmit uploaded file contents,
-filenames, chemical compositions, geometries, calculation results or user
-identifiers. Users may access the same calculator with application analytics
-disabled via the `non-tracking URL`_. The locally installed calculation
-package does not require this analytics service.
+* Contact me at: giolajide@crimson.ua.edu.
 
 Authors and license
 -------------------
