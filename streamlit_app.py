@@ -1,10 +1,4 @@
-"""
-NanoparticleAtomCounter web interface.
-App is here: https://nanoparticleatomcounter.streamlit.app/
-Redone 11-23-2026
-*Stories*
--------
-"""
+"""NanoparticleAtomCounter web interface. Uses the existing CLI unchanged."""
 from __future__ import annotations
 
 import ast
@@ -268,6 +262,105 @@ def geometry_svg(radius_A, theta, radius_type):
     </svg>'''
 
 
+
+def atom_types_svg():
+    """Symmetric illustrative cross-section, not a reconstruction or atom count.
+
+    All contact-layer atoms are gold (interior) or red (perimeter). Upper
+    layers are classified geometrically in the schematic only. The support
+    is deliberately light gray and never counted in nanoparticle populations.
+    """
+    palette = dict(zip(LABELS, COLORS))
+    palette['Support'] = '#b9bdc4'
+    radius = 12
+    dx = 24
+    dz = dx * math.sqrt(3) / 2
+    cx, base = 180, 182
+    row_sizes = (12, 13, 12, 13, 12, 11, 10, 7, 4)
+    # Doubled horizontal lattice coordinate permits exact neighbor checks.
+    lattice = {(2*i-(n-1), j) for j,n in enumerate(row_sizes) for i in range(n)}
+    neighbors = ((-2,0),(2,0),(-1,-1),(1,-1),(-1,1),(1,1))
+    keys = dict(zip(palette, ('bulk','surface','interface','perimeter','support')))
+    defs = ''.join(
+        f'<radialGradient id="{keys[name]}" cx="30%" cy="25%" r="80%">'
+        f'<stop offset="0%" stop-color="#ffffff" stop-opacity="0.60"/>'
+        f'<stop offset="48%" stop-color="{color}"/>'
+        f'<stop offset="100%" stop-color="{color}"/></radialGradient>'
+        for name,color in palette.items()
+    )
+    # Use a solid palette-colored base under the translucent highlight.
+    def atom(x,y,site):
+        return (f'<circle cx="{x:.3f}" cy="{y:.3f}" r="{radius}" '
+                f'fill="{palette[site]}"/>'
+                f'<circle cx="{x:.3f}" cy="{y:.3f}" r="{radius}" '
+                f'fill="url(#{keys[site]})" stroke="#000000" stroke-opacity="0.18" stroke-width="0.6"/>')
+    support = ''.join(atom(cx+(i-(n-1)/2)*dx,base+(j+1)*dz,'Support')
+                      for j,n in ((1,15),(0,14)) for i in range(n))
+    atoms = []
+    for j,n in enumerate(row_sizes):
+        for i in range(n):
+            u = 2*i-(n-1)
+            if j == 0:
+                site = 'Perimeter' if i in (0,n-1) else 'Interfacial'
+            else:
+                site = 'Bulk' if all((u+a,j+b) in lattice for a,b in neighbors) else 'Surface'
+            atoms.append(atom(cx+u*dx/2,base-j*dz,site))
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 240" '
+            f'role="img" aria-label="Cross-section of a supported nanoparticle showing bulk, surface, interfacial and perimeter atoms">'
+            f'<defs>{defs}</defs>{support}{"".join(atoms)}</svg>')
+
+
+def color_dot(color):
+    return (f'<span aria-hidden="true" style="display:inline-block;width:11px;height:11px;'
+            f'border-radius:50%;background:{color};border:1px solid #8888;'
+            f'margin-right:7px;vertical-align:middle;"></span>')
+
+
+def shared_site_legend():
+    items = ''.join(f'<span style="white-space:nowrap;">{color_dot(color)}{label}</span>'
+                    for label,color in zip(LABELS,COLORS))
+    st.markdown('<div style="display:flex;justify-content:center;flex-wrap:wrap;'
+                'gap:10px 22px;font-size:0.9rem;margin:4px 0 14px;">'+items+'</div>',
+                unsafe_allow_html=True)
+
+
+def population_table(composition):
+    """Compact, theme-compatible table; all interpolated labels are internal."""
+    palette = dict(zip(LABELS,COLORS))
+    rows = ''.join(
+        f'<tr><td>{color_dot(palette[row["Site"]])}{row["Site"]}</td>'
+        f'<td style="text-align:right;">{row["Atoms"]:,.0f}</td>'
+        f'<td style="text-align:right;">{row["Fraction (%)"]:.2f}</td></tr>'
+        for row in composition.to_dict('records')
+    )
+    st.markdown('<div style="overflow-x:auto;"><table style="width:100%;font-size:0.88rem;'
+                'font-variant-numeric:tabular-nums;"><thead><tr><th>Site</th>'
+                '<th style="text-align:right;">Atoms</th><th style="text-align:right;">%</th>'
+                '</tr></thead><tbody>'+rows+'</tbody></table></div>',unsafe_allow_html=True)
+
+
+def population_donut(composition):
+    """Responsive arc radii prevent clipping; one shared external legend."""
+    data = composition.assign(Order=range(len(composition)))
+    arcs = alt.Chart(data).mark_arc(
+        innerRadius=alt.ExprRef(expr='min(width, height) * 0.25'),
+        outerRadius=alt.ExprRef(expr='min(width, height) * 0.45'),
+    ).encode(
+        theta=alt.Theta('Atoms:Q'),
+        color=alt.Color('Site:N',scale=alt.Scale(domain=LABELS,range=COLORS),legend=None),
+        order=alt.Order('Order:Q',sort='ascending'),
+        tooltip=['Site',alt.Tooltip('Atoms:Q',format=',.0f'),
+                 alt.Tooltip('Fraction (%):Q',format='.2f')],
+    )
+    center = pd.DataFrame({'Total':[metric_value(composition['Atoms'].sum())],
+                           'Label':['Total atoms']})
+    base = alt.Chart(center)
+    total = base.mark_text(fontWeight='bold',fontSize=alt.ExprRef(
+        expr='min(21, min(width, height)*0.75/max(1,length(datum.Total)))'),dy=-8).encode(
+        text='Total:N')
+    label = base.mark_text(fontSize=12,dy=12).encode(text='Label:N')
+    return (arcs + total + label).properties(height=260).configure_view(stroke=None)
+
 def signature(df, mode):
     return hashlib.sha256(df.to_csv(index=False).encode()+mode.encode()).hexdigest()
 
@@ -325,23 +418,25 @@ def render_results(workflow, sig):
         cells[1].metric('Total atoms (valid partitions)',metric_value(out.loc[valid,'Total'].sum()) if valid.any() else np.nan)
         denom = out.loc[valid,'Total'].sum()
         cells[2].metric('Surface fraction (valid atoms)',f"{100*out.loc[valid,'Surface'].sum()/denom:.2f}%" if denom>0 else 'Unavailable')
-    st.caption('Bulk = Total − Surface − Interface − Perimeter (derived, not a native CLI output). Interface and surface exclude perimeter in the package model.')
+    #st.caption('Bulk = Total − Surface − Interface − Perimeter (derived, not a native CLI output). Interface and surface exclude perimeter in the package model.')
     if valid.any():
         aggregate = out.loc[valid,SITES].sum()
         composition = pd.DataFrame({'Site':LABELS,'Atoms':aggregate.to_numpy()})
         composition['Fraction (%)'] = 100*composition['Atoms']/composition['Atoms'].sum()
-        left,right = st.columns([1,1])
+        illustration, left, right = st.columns([1, 1, 1.2])
+        with illustration:
+            st.markdown('**Atom-type definitions**')
+            st.image(atom_types_svg(),use_container_width=True)
+            st.caption('Schematic cross-section · light gray = support (not counted).')
         with left:
             st.markdown('**Atom population fractions**')
-            chart = alt.Chart(composition).mark_arc(innerRadius=55,outerRadius=105).encode(
-                theta=alt.Theta('Atoms:Q'),color=alt.Color('Site:N',scale=alt.Scale(domain=LABELS,range=COLORS),legend=alt.Legend(orient='bottom')),
-                order=alt.Order('Site:N'),tooltip=['Site',alt.Tooltip('Atoms:Q',format=',.0f'),alt.Tooltip('Fraction (%):Q',format='.2f')]).properties(height=260)
-            st.altair_chart(chart,use_container_width=True)
+            st.altair_chart(population_donut(composition),use_container_width=True)
         with right:
-            st.dataframe(composition,hide_index=True,use_container_width=True,
-                         column_config={'Atoms':st.column_config.NumberColumn(format='%.0f'),'Fraction (%)':st.column_config.NumberColumn(format='%.2f')})
+            st.markdown('**Population breakdown**')
+            population_table(composition)
             if workflow=='batch':
                 st.caption('Atom-weighted fractions: sum of each site population divided by sum of total atoms over valid rows.')
+        shared_site_legend()
     if workflow=='batch':
         st.markdown('**Population distributions**')
         fields = ['Total','Bulk','Surface','Interface','Perimeter'] + [s+' fraction (%)' for s in SITES]
@@ -475,8 +570,8 @@ def resources():
                 col.image(str(DOCS/name),caption=caption,use_container_width=True)
     with st.expander('How atom populations are estimated'):
         st.markdown('The package approximates the nanoparticle as a spherical cap. The total is estimated from volume and bulk atomic density. The interface and perimeter are estimated from volumes or footprint areas depending on mode; the exposed non-interface surface is estimated from area and facet-dependent density. Bulk is obtained by subtraction. See the preprint for equations and validation.')
-        if (DOCS/'Nanoparticle_Legend.png').is_file():
-            st.image(str(DOCS/'Nanoparticle_Legend.png'),caption='Atom-type definitions',width=400)
+        st.image(atom_types_svg(),caption='Schematic cross-section · light gray = support (not counted).',width=360)
+        shared_site_legend()
     with st.expander('Batch input format and facet conventions'):
         st.code(','.join(HEADERS),language='text')
         st.markdown('Provide Theta, Element and either radius for every row. If both radii are supplied, a positive r takes precedence. Zero or blank r uses R. Optional facet columns can be omitted or left blank. Use a tabulated three-index facet such as `(1, 1, 1)`; quote fields containing commas in CSV. Do not use extra columns. The web app resolves mixed radius definitions before calling the CLI.')
